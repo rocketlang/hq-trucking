@@ -1,0 +1,81 @@
+<!doctype html><html><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rates Admin</title>
+<style>
+body{font-family:system-ui,Segoe UI,Roboto;margin:0;background:#0b1020;color:#e8ebff}
+.wrap{max-width:860px;margin:20px auto;padding:16px}
+.card{background:#111731;border:1px solid #1e264a;border-radius:16px;padding:16px;margin-bottom:14px}
+h1{font-size:20px;margin:0 0 10px} label{display:block;margin:8px 0 4px}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #22305d;background:#0d1330;color:#e8ebff}
+button{margin-top:12px;padding:10px 14px;border:1px solid #2a3a76;background:#15225a;color:#e8ebff;border-radius:10px;cursor:pointer}
+.success{color:#22c55e;margin-top:8px} .error{color:#ef4444;margin-top:8px}
+small{color:#a9b2d0}
+</style></head><body>
+<div class="wrap">
+  <h1>Daily Lane Rates – Admin</h1>
+
+  <div class="card">
+    <h2>Add one lane</h2>
+    <label>From city</label><input id="from"/>
+    <label>To city</label><input id="to"/>
+    <label>Rate (₹)</label><input id="rate" type="number"/>
+    <label>Fuel Cost (₹) <small>(optional)</small></label><input id="fuelCost" type="number"/>
+    <label>Distance (km) <small>(optional)</small></label><input id="distance" type="number"/>
+    <label>Trend</label>
+    <select id="trend"><option>up</option><option>stable</option><option>down</option></select>
+    <button id="addBtn">Add Rate</button>
+    <div id="one-msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Bulk paste (many lanes)</h2>
+    <small>Format: <code>from,to,rate,fuelCost,distance,trend</code> — one line per lane.<br>
+    Example: <code>Mumbai,Delhi,45000,8500,1420,up</code></small>
+    <textarea id="bulk" rows="8" placeholder="Paste lines here..."></textarea>
+    <button id="bulkBtn">Upload Lines</button>
+    <div id="bulk-msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Today’s entries</h2>
+    <label>Date (YYYY-MM-DD)</label><input id="date" />
+    <button id="loadBtn">Load Daily</button>
+    <div id="daily"></div>
+  </div>
+</div>
+
+<script>
+async function postJSON(url, obj){
+  const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+  return res.json();
+}
+document.querySelector('#addBtn').onclick = async ()=>{
+  const body = {
+    from: from.value.trim(), to: to.value.trim(),
+    rate: Number(rate.value||0),
+    fuelCost: Number(fuelCost.value||0)||undefined,
+    distance: Number(distance.value||0)||undefined,
+    trend: trend.value
+  };
+  const r = await postJSON('/api/admin/rates', body);
+  oneMsg.textContent = r.success ? '✅ Added' : '❌ ' + (r.error||'Failed');
+  oneMsg.className = r.success ? 'success' : 'error';
+};
+
+document.querySelector('#bulkBtn').onclick = async ()=>{
+  const res = await fetch('/api/admin/rates/bulk',{method:'POST',headers:{'Content-Type':'text/plain'},body: bulk.value});
+  const r = await res.json();
+  bulkMsg.textContent = r.success ? `✅ Added ${r.added} lines, skipped ${r.skipped}` : '❌ ' + (r.error||'Failed');
+  bulkMsg.className = r.success ? 'success' : 'error';
+};
+
+document.querySelector('#loadBtn').onclick = async ()=>{
+  const d = date.value.trim() || new Date().toISOString().slice(0,10);
+  const r = await fetch('/api/widget/rates/daily?date='+encodeURIComponent(d)).then(x=>x.json());
+  const rows = r.data.routes.map((x,i)=>`<tr><td>${i+1}</td><td>${x.from} → ${x.to}</td><td>₹ ${Number(x.rate).toLocaleString('en-IN')}</td><td>${x.trend}</td></tr>`).join('');
+  daily.innerHTML = `
+    <p><b>${d}</b> — Total: ${r.data.summary.total}, Avg: ₹ ${Number(r.data.summary.avgRate||0).toLocaleString('en-IN')}</p>
+    <table style="width:100%;border-collapse:collapse"><tr><th>#</th><th>Lane</th><th>Rate</th><th>Trend</th></tr>${rows}</table>`;
+};
+</script>
+</body></html>

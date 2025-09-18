@@ -1,0 +1,22 @@
+{
+  "name": "hq-trucking-backend",
+  "version": "1.0.0",
+  "description": "HQ Trucking Intelligence Platform - Android/Termux",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node src/app.js --dev",
+    "test": "node tests/test.js",
+    "mobile": "node src/app.js --mobile-optimized"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "compression": "^1.7.4",
+    "better-sqlite3": "^8.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
