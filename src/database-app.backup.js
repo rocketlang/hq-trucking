@@ -1,3 +1,33 @@
+const fs   = require('fs');
+const path = require('path');
+// safe paths
+const ROOT       = path.join(__dirname, '..');   // repo root (one level up from /src)
+const PUBLIC_DIR = path.join(ROOT, 'public');
+
+function contentTypeFor(ext) {
+  switch (ext) {
+    case '.html': return 'text/html; charset=utf-8';
+    case '.css':  return 'text/css';
+    case '.js':   return 'application/javascript';
+    case '.svg':  return 'image/svg+xml';
+    case '.json': return 'application/json; charset=utf-8';
+    default:      return 'text/plain; charset=utf-8';
+  }
+}
+
+function servePublic(res, relPath) {
+  // prevent ../ sneaking
+  const safeRel = path.normalize(relPath).replace(/^(\.\.[/\\])+/, '');
+  const filePath = path.join(PUBLIC_DIR, safeRel);
+  if (!filePath.startsWith(PUBLIC_DIR)) {
+    res.statusCode = 403; return res.end('Forbidden');
+  }
+  fs.readFile(filePath, (err, data) => {
+    if (err) { res.statusCode = 404; return res.end(JSON.stringify({error:'Not found', path:'/public/'+safeRel})); }
+    res.setHeader('Content-Type', contentTypeFor(path.extname(filePath).toLowerCase()));
+    res.end(data);
+  });
+}
                 const newRate = await this.db.addRate(req.body);
                 res.json({ 
                     success: true, 
