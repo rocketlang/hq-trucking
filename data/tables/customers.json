@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Reliance Industries",
+    "contact": "logistics@reliance.com",
+    "phone": "+91-22-12345678",
+    "address": "Mumbai",
+    "rating": 5,
+    "totalBusiness": 2500000
+  },
+  {
+    "id": 2,
+    "name": "Tata Motors",
+    "contact": "shipping@tatamotors.com",
+    "phone": "+91-20-87654321",
+    "address": "Pune",
+    "rating": 4.8,
+    "totalBusiness": 1800000
+  },
+  {
+    "id": 3,
+    "name": "Infosys Limited",
+    "contact": "transport@infosys.com",
+    "phone": "+91-80-11223344",
+    "address": "Bangalore",
+    "rating": 4.9,
+    "totalBusiness": 950000
+  },
+  {
+    "id": 4,
+    "name": "Asian Paints",
+    "contact": "logistics@asianpaints.com",
+    "phone": "+91-22-99887766",
+    "address": "Mumbai",
+    "rating": 4.7,
+    "totalBusiness": 1200000
+  }
+]

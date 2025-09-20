@@ -1,0 +1,215 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Rates Board</title>
+<style>
+  :root{--bg:#0b1220;--fg:#e6e6e6;--muted:#8aa0bf;--card:#0f1a2b;--line:#1f2937;--accent:#3ea76a;--danger:#f87171}
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:12px;color:var(--fg);background:var(--bg)}
+  h2{margin:0 0 8px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  input,select,button,textarea{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px}
+  input,select,button{height:38px}
+  button{cursor:pointer}
+  button.primary{border-color:#28543c}
+  button.primary:hover{background:#123}
+  button.danger{border-color:#6b1d1d}
+  small.muted{color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  tbody tr:nth-child(odd){background:#0d1828}
+  .ok{color:var(--accent)} .err{color:var(--danger)}
+  .flex-1{flex:1}
+  .right{margin-left:auto}
+  .chip{padding:2px 8px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .nowrap{white-space:nowrap}
+</style>
+
+<h2>Daily Lane Rates</h2>
+
+<div class="card">
+  <div class="toolbar">
+    <div class="row">
+      <input id="date" type="date" />
+      <input id="from" placeholder="From city (e.g., Kolkata)" />
+      <input id="toFilter" placeholder="Filter To-city contains…" />
+      <select id="size">
+        <option value="">All sizes</option>
+        <option>SXL</option>
+        <option>MXL</option>
+      </select>
+      <button class="primary" onclick="load()">Load</button>
+      <button onclick="downloadCsv()">Download CSV</button>
+      <button onclick="copyCsv()">Copy table CSV</button>
+      <span id="count" class="chip">0 rows</span>
+    </div>
+  </div>
+  <div style="overflow:auto;margin-top:8px">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th data-key="from_city" onclick="sortBy(this)">From ↑↓</th>
+          <th data-key="to_city" onclick="sortBy(this)">To ↑↓</th>
+          <th data-key="size" onclick="sortBy(this)">Size ↑↓</th>
+          <th data-key="price" onclick="sortBy(this)">Price ↑↓</th>
+          <th data-key="source" onclick="sortBy(this)">Source ↑↓</th>
+          <th data-key="created_at" onclick="sortBy(this)">Created ↑↓</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin:0 0 8px">Quick Paste (Admin) <small class="muted">— temporary helper</small></h3>
+  <div class="row" style="margin-bottom:6px">
+    <input id="origin" placeholder="Origin (e.g., Kolkata)" />
+    <input id="source" placeholder="Source (WhatsApp/…)" />
+    <button onclick="savePaste()" class="primary">Save Parsed</button>
+    <button onclick="clearPaste()" class="danger">Clear</button>
+    <span id="msg" class="chip right"></span>
+  </div>
+  <textarea id="paste" rows="6" class="flex-1" placeholder="Bombay jnpt MXL 60k
+Bombay jnpt SXL 43k
+Guwahati MXL 68k
+Guwahati SXL 58k"></textarea>
+  <div><small class="muted">Tip: one lane per line • supports “SXL/MXL 60k/105k” formats • date = widget’s date</small></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = { rows: [], sort: {key:'from_city', dir:1} };
+
+// default date = today
+$('#date').value = new Date().toISOString().slice(0,10);
+
+// render table
+function render(){
+  const tbody = $('#tbl tbody');
+  tbody.innerHTML = '';
+
+  // filters
+  const toNeedle = $('#toFilter').value.trim().toLowerCase();
+  const size = $('#size').value;
+
+  let rows = state.rows.filter(r =>
+    (!toNeedle || (r.to_city||'').toLowerCase().includes(toNeedle)) &&
+    (!size || r.size === size)
+  );
+
+  // sort
+  const {key, dir} = state.sort;
+  rows.sort((a,b)=>{
+    const av = a[key] ?? '', bv = b[key] ?? '';
+    if (key === 'price') return (av - bv) * dir;
+    return String(av).localeCompare(String(bv)) * dir;
+  });
+
+  for(const r of rows){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.from_city}</td>
+      <td>${r.to_city}</td>
+      <td>${r.size}</td>
+      <td>₹ ${Number(r.price).toLocaleString('en-IN')}</td>
+      <td>${r.source||''}</td>
+      <td class="nowrap">${r.created_at||''}</td>
+/      <td><button onclick="gotoExport('${r.date}','${r.from_city}')">Export</button></td>
+</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  $('#count').textContent = rows.length + ' rows';
+}
+
+function sortBy(th){
+  const key = th.dataset.key;
+  if (state.sort.key === key) state.sort.dir *= -1; else { state.sort.key = key; state.sort.dir = 1; }
+  render();
+}
+
+// load from API
+async function load(){
+  const d = $('#date').value;
+  const f = $('#from').value.trim();
+  const q = new URLSearchParams({ date: d });
+  if (f) q.set('from', f);
+  const res = await fetch('/api/rates?' + q.toString());
+  const j = await res.json();
+  state.rows = j.data || [];
+  render();
+}
+
+// paste → POST
+async function savePaste(){
+  const origin = $('#origin').value.trim();
+  const source = $('#source').value.trim();
+  const text = $('#paste').value.trim();
+  const msg = $('#msg');
+
+  if(!origin || !text){ msg.textContent = 'Enter origin & paste text'; msg.className='chip err'; return; }
+
+  // NOTE: server uses its own current date; if you want the widget date enforced,
+  // send ?date=YYYY-MM-DD and adjust API (future improvement).
+  const res = await fetch('/api/rates/bulk-paste', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ origin, source, text })
+  });
+  const j = await res.json();
+  if (res.ok){
+    msg.textContent = 'Inserted ' + j.inserted + ' lanes';
+    msg.className = 'chip ok';
+    await load();
+  } else {
+    msg.textContent = j.error || 'Error';
+    msg.className = 'chip err';
+  }
+}
+
+function clearPaste(){
+  $('#paste').value=''; $('#msg').textContent='';
+}
+
+// download CSV (opens new tab / prompts save)
+function downloadCsv(){
+  const d = $('#date').value;
+  const f = $('#from').value.trim();
+  const q = new URLSearchParams({ date: d });
+  if (f) q.set('from', f);
+  const url = '/api/rates-export?' + q.toString();
+  // open in same iframe-friendly way
+  window.open(url, '_blank');
+}
+
+// copy the currently rendered table as CSV
+function copyCsv(){
+  const header = ['from_city','to_city','size','price','source','created_at'];
+  const esc = s => {
+    const v = (s==null?'':String(s));
+    return /[,"\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
+  };
+  const rows = Array.from(document.querySelectorAll('#tbl tbody tr')).map(tr=>{
+    const tds = tr.querySelectorAll('td');
+    return [
+      tds[0].textContent, tds[1].textContent, tds[2].textContent,
+      (tds[3].textContent||'').replace(/[^0-9]/g,''), // plain number
+      tds[4].textContent, tds[5].textContent
+    ];
+  });
+  const csv = [header.join(',')].concat(rows.map(r=>r.map(esc).join(','))).join('\n');
+  navigator.clipboard.writeText(csv).then(()=>{
+    alert('Copied current table to clipboard as CSV.');
+  }, ()=> alert('Copy failed (clipboard permissions).'));
+}
+
+// auto-load initial view
+// ...tumhare existing functions (load, savePaste, etc.) ke neeche...
+
+  function gotoExport(date, from){
+    const url = `/widgets/rates-export/index.html?date=${encodeURIComponent(date)}&from=${encodeURIComponent(from)}`;
+    location.href = url;
+  }
+load();
+</script>

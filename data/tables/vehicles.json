@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "number": "MH-12-AB-1234",
+    "type": "Heavy Truck",
+    "capacity": 25,
+    "status": "active",
+    "driver": "Rajesh Kumar",
+    "lastMaintenance": "2024-01-10",
+    "nextMaintenance": "2024-02-10"
+  },
+  {
+    "id": 2,
+    "number": "DL-01-CD-5678",
+    "type": "Medium Truck",
+    "capacity": 18,
+    "status": "active",
+    "driver": "Suresh Patel",
+    "lastMaintenance": "2024-01-08",
+    "nextMaintenance": "2024-02-08"
+  },
+  {
+    "id": 3,
+    "number": "TN-09-EF-9012",
+    "type": "Heavy Truck",
+    "capacity": 30,
+    "status": "maintenance",
+    "driver": null,
+    "lastMaintenance": "2024-01-16",
+    "nextMaintenance": "2024-01-20"
+  },
+  {
+    "id": 4,
+    "number": "KA-03-GH-3456",
+    "type": "Light Truck",
+    "capacity": 12,
+    "status": "active",
+    "driver": "Ramesh Singh",
+    "lastMaintenance": "2024-01-12",
+    "nextMaintenance": "2024-02-12"
+  },
+  {
+    "id": 5,
+    "number": "GJ-18-IJ-7890",
+    "type": "Medium Truck",
+    "capacity": 20,
+    "status": "idle",
+    "driver": "Vikram Sharma",
+    "lastMaintenance": "2024-01-14",
+    "nextMaintenance": "2024-02-14"
+  },
+  {
+    "id": 6,
+    "number": "UP-32-KL-2345",
+    "type": "Heavy Truck",
+    "capacity": 28,
+    "status": "active",
+    "driver": "Mohan Yadav",
+    "lastMaintenance": "2024-01-11",
+    "nextMaintenance": "2024-02-11"
+  }
+]

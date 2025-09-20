@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "from": "Mumbai",
+    "to": "Delhi",
+    "rate": 45000,
+    "fuelCost": 8500,
+    "distance": 1420,
+    "trend": "up",
+    "createdAt": "2024-01-15T10:00:00Z"
+  },
+  {
+    "id": 2,
+    "from": "Delhi",
+    "to": "Kolkata",
+    "rate": 38000,
+    "fuelCost": 7200,
+    "distance": 1450,
+    "trend": "stable",
+    "createdAt": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 3,
+    "from": "Chennai",
+    "to": "Bangalore",
+    "rate": 25000,
+    "fuelCost": 4800,
+    "distance": 350,
+    "trend": "down",
+    "createdAt": "2024-01-15T11:00:00Z"
+  },
+  {
+    "id": 4,
+    "from": "Pune",
+    "to": "Hyderabad",
+    "rate": 32000,
+    "fuelCost": 6100,
+    "distance": 560,
+    "trend": "up",
+    "createdAt": "2024-01-15T11:30:00Z"
+  },
+  {
+    "id": 5,
+    "from": "Ahmedabad",
+    "to": "Mumbai",
+    "rate": 28000,
+    "fuelCost": 5300,
+    "distance": 530,
+    "trend": "stable",
+    "createdAt": "2024-01-15T12:00:00Z"
+  },
+  {
+    "id": 6,
+    "from": "Kolkata",
+    "to": "Bhubaneswar",
+    "rate": 22000,
+    "fuelCost": 4200,
+    "distance": 440,
+    "trend": "up",
+    "createdAt": "2024-01-16T09:00:00Z"
+  },
+  {
+    "id": 7,
+    "from": "Bangalore",
+    "to": "Mysore",
+    "rate": 15000,
+    "fuelCost": 2800,
+    "distance": 150,
+    "trend": "stable",
+    "createdAt": "2024-01-16T09:30:00Z"
+  },
+  {
+    "id": 8,
+    "from": "Jaipur",
+    "to": "Udaipur",
+    "rate": 18000,
+    "fuelCost": 3400,
+    "distance": 280,
+    "trend": "up",
+    "createdAt": "2024-01-16T10:00:00Z"
+  }
+]

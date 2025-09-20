@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "name": "Rajesh Kumar",
+    "license": "DL123456789",
+    "phone": "+91-9876543210",
+    "experience": 8,
+    "rating": 4.5,
+    "status": "active"
+  },
+  {
+    "id": 2,
+    "name": "Suresh Patel",
+    "license": "GJ987654321",
+    "phone": "+91-9876543211",
+    "experience": 12,
+    "rating": 4.8,
+    "status": "active"
+  },
+  {
+    "id": 3,
+    "name": "Ramesh Singh",
+    "license": "UP456789123",
+    "phone": "+91-9876543212",
+    "experience": 5,
+    "rating": 4.2,
+    "status": "active"
+  },
+  {
+    "id": 4,
+    "name": "Vikram Sharma",
+    "license": "RJ789123456",
+    "phone": "+91-9876543213",
+    "experience": 10,
+    "rating": 4.6,
+    "status": "active"
+  },
+  {
+    "id": 5,
+    "name": "Mohan Yadav",
+    "license": "UP321654987",
+    "phone": "+91-9876543214",
+    "experience": 7,
+    "rating": 4.3,
+    "status": "active"
+  }
+]

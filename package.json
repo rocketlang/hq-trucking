@@ -1,22 +1,40 @@
 {
-  "name": "hq-trucking-backend",
-  "version": "1.0.0",
-  "description": "HQ Trucking Intelligence Platform - Android/Termux",
-  "main": "src/app.js",
+  "name": "hq-trucking",
+  "version": "2.0.0-database",
+  "private": true,
+  "type": "commonjs",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "node src/app.js --dev",
-    "test": "node tests/test.js",
-    "mobile": "node src/app.js --mobile-optimized"
+    "start": "node ./src/host/server.js",
+    "lint": "node -e \"console.log('lint stub')\"",
+    "dev": "nodemon ./src/host/server.js",
+    "stop": "pkill -f 'src/host/server.js' || true"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
-    "compression": "^1.7.4",
-    "better-sqlite3": "^8.7.0"
+    "csv-parse": "^5.5.6",
+    "express": "^4.21.2",
+    "nanoid": "^5.1.5",
+    "sql.js": "^1.13.0",
+    "uuid": "^13.0.0"
   },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+  "description": "",
+  "main": "simple-trucking-server.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rocketlang/hq-trucking.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rocketlang/hq-trucking/issues"
+  },
+  "homepage": "https://github.com/rocketlang/hq-trucking#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }

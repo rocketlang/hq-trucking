@@ -1,0 +1,123 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rates CSV Export</title>
+<style>
+  :root{--bg:#0b1220;--card:#0f172a;--muted:#94a3b8;--border:#1e293b;--ink:#e2e8f0;--accent:#16a34a}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{padding:18px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+  h1{margin:0 0 12px 0;font-size:20px}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+  input,select{background:#0c1424;border:1px solid var(--border);color:var(--ink);padding:10px 12px;border-radius:12px;min-width:200px}
+  button{border-radius:12px;border:1px solid var(--border);padding:10px 14px;background:#081021;color:var(--ink);cursor:pointer}
+  button.primary{background:#0b203f;border-color:#143d6b}
+  button.primary:active{transform:translateY(1px)}
+  .muted{color:var(--muted);font-size:12px}
+  .ok{color:var(--accent)}
+  .spacer{flex:1}
+  .tip{margin-top:10px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .chip{font-size:12px;border:1px solid var(--border);padding:6px 10px;border-radius:999px;background:#0c1424;cursor:pointer}
+  .chip:hover{border-color:#2b3a52}
+</style>
+
+<div class="wrap">
+  <div class="card">
+    <h1>Rates CSV Export</h1>
+
+    <div class="row" style="margin-bottom:10px">
+      <div>
+        <label for="date">Date</label>
+        <input id="date" type="date" />
+      </div>
+
+      <div>
+        <label for="from">From city (optional)</label>
+        <input id="from" type="text" placeholder="e.g., Kolkata" />
+        <div class="chips" id="quickFrom"></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="row">
+        <button id="btnDownload" class="primary">Download CSV</button>
+        <button id="btnOpen">Open in new tab</button>
+      </div>
+    </div>
+
+    <div class="muted" id="status">Ready.</div>
+    <div class="tip muted">Tip: If “From city” is empty, all origins for that date are exported.</div>
+  </div>
+</div>
+
+<script>
+  const $ = s => document.querySelector(s);
+  const fmtDate = d => d.toISOString().slice(0,10);
+
+  // Defaults: date = today in your timezone (not UTC midnight)
+  const today = new Date(); 
+  $('#date').value = fmtDate(today);
+
+  // Optional quick chips from recent “from_city” values the API has seen
+  // (best-effort; falls back silently if endpoint not present).
+  (async function loadChips(){
+    try{
+      // Reuse /api/rates?date=YYYY-MM-DD to infer distinct from_citys for today
+      const res = await fetch(`/api/rates?date=${encodeURIComponent($('#date').value)}`);
+      const j = await res.json();
+      const uniq = [...new Set((j.data||[]).map(r=>r.from_city))].slice(0,8);
+      const box = $('#quickFrom');
+      uniq.forEach(name=>{
+        const c = document.createElement('div');
+        c.className = 'chip';
+        c.textContent = name;
+        c.onclick = ()=> { $('#from').value = name; };
+        box.appendChild(c);
+      });
+    }catch(e){}
+  })();
+
+  function buildURL(openInNewTab=false){
+    const date = $('#date').value || fmtDate(new Date());
+    const from = ($('#from').value||'').trim();
+    const base = '/api/rates-export';
+    const q = new URLSearchParams({ date });
+    if (from) q.set('from', from);
+    const url = `${base}?${q.toString()}`;
+    const nice = `rates_${date}_${from?from.replace(/\s+/g,'_'):'ALL'}.csv`;
+    return { url, filename: nice, date, from };
+  }
+
+  async function downloadCSV(){
+    const { url, filename } = buildURL();
+    $('#status').textContent = 'Preparing download…';
+    try{
+      const resp = await fetch(url, { headers: { 'Accept': 'text/csv' } });
+      if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(()=>{ URL.revokeObjectURL(link.href); link.remove(); }, 1000);
+      $('#status').innerHTML = `<span class="ok">✔</span> Downloaded <code>${filename}</code>`;
+    }catch(err){
+      $('#status').textContent = `Failed: ${err.message}`;
+    }
+  }
+
+  function openInNewTab(){
+    const { url } = buildURL();
+    window.open(url, '_blank');
+    $('#status').textContent = 'Opened CSV in a new tab.';
+  }
+
+  $('#btnDownload').addEventListener('click', downloadCSV);
+  $('#btnOpen').addEventListener('click', openInNewTab);
+const $ = s => document.querySelector(s);
+const p = new URLSearchParams(location.search);
+if (p.get('date')) $('#date').value = p.get('date');
+if (p.get('from')) $('#from').value = p.get('from');
+</script>

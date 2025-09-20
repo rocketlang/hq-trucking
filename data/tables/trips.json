@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "vehicleId": "MH-12-AB-1234",
+    "route": "Mumbai-Delhi",
+    "status": "completed",
+    "revenue": 45000,
+    "startDate": "2024-01-14",
+    "endDate": "2024-01-16",
+    "distance": 1420
+  },
+  {
+    "id": 2,
+    "vehicleId": "DL-01-CD-5678",
+    "route": "Delhi-Kolkata",
+    "status": "in-progress",
+    "revenue": null,
+    "startDate": "2024-01-16",
+    "endDate": null,
+    "distance": 1450
+  },
+  {
+    "id": 3,
+    "vehicleId": "KA-03-GH-3456",
+    "route": "Chennai-Bangalore",
+    "status": "completed",
+    "revenue": 25000,
+    "startDate": "2024-01-15",
+    "endDate": "2024-01-15",
+    "distance": 350
+  },
+  {
+    "id": 4,
+    "vehicleId": "UP-32-KL-2345",
+    "route": "Pune-Hyderabad",
+    "status": "completed",
+    "revenue": 32000,
+    "startDate": "2024-01-13",
+    "endDate": "2024-01-14",
+    "distance": 560
+  },
+  {
+    "id": 5,
+    "vehicleId": "GJ-18-IJ-7890",
+    "route": "Ahmedabad-Mumbai",
+    "status": "scheduled",
+    "revenue": null,
+    "startDate": "2024-01-18",
+    "endDate": null,
+    "distance": 530
+  }
+]

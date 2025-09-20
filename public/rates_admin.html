@@ -1,81 +1,110 @@
-<!doctype html><html><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Rates Admin</title>
 <style>
-body{font-family:system-ui,Segoe UI,Roboto;margin:0;background:#0b1020;color:#e8ebff}
-.wrap{max-width:860px;margin:20px auto;padding:16px}
-.card{background:#111731;border:1px solid #1e264a;border-radius:16px;padding:16px;margin-bottom:14px}
-h1{font-size:20px;margin:0 0 10px} label{display:block;margin:8px 0 4px}
-input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #22305d;background:#0d1330;color:#e8ebff}
-button{margin-top:12px;padding:10px 14px;border:1px solid #2a3a76;background:#15225a;color:#e8ebff;border-radius:10px;cursor:pointer}
-.success{color:#22c55e;margin-top:8px} .error{color:#ef4444;margin-top:8px}
-small{color:#a9b2d0}
-</style></head><body>
+  :root{color-scheme:dark light}
+  body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0f1620;color:#e9eef5;margin:0}
+  .wrap{max-width:900px;margin:32px auto;padding:0 16px}
+  .card{background:#121b27;border:1px solid #203044;border-radius:16px;padding:20px;margin:18px 0;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  h1{font-weight:700;margin:.2rem 0 1rem}
+  input,select,textarea{width:100%;padding:12px 14px;background:#0e1520;color:#e9eef5;border:1px solid #293b4f;border-radius:12px;outline:none}
+  label{display:block;margin:.5rem 0 .35rem;color:#b9c6d1}
+  button{padding:12px 16px;border-radius:12px;border:1px solid #31465f;background:#1b2a3a;color:#e9eef5;cursor:pointer}
+  button:hover{filter:brightness(1.1)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mono{font-family:ui-monospace,Consolas,Menlo,monospace}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid #233347}
+  th{text-align:left;color:#a9b6c3}
+</style>
+</head>
+<body>
 <div class="wrap">
-  <h1>Daily Lane Rates – Admin</h1>
+  <h1>Daily Lane Rates — Admin</h1>
 
   <div class="card">
     <h2>Add one lane</h2>
-    <label>From city</label><input id="from"/>
-    <label>To city</label><input id="to"/>
-    <label>Rate (₹)</label><input id="rate" type="number"/>
-    <label>Fuel Cost (₹) <small>(optional)</small></label><input id="fuelCost" type="number"/>
-    <label>Distance (km) <small>(optional)</small></label><input id="distance" type="number"/>
-    <label>Trend</label>
-    <select id="trend"><option>up</option><option>stable</option><option>down</option></select>
-    <button id="addBtn">Add Rate</button>
-    <div id="one-msg"></div>
+    <div class="row">
+      <div><label>From city</label><input id="from"/></div>
+      <div><label>To city</label><input id="to"/></div>
+    </div>
+    <div class="row">
+      <div><label>Rate (₹)</label><input id="rate" type="number"/></div>
+      <div><label>Date (YYYY-MM-DD)</label><input id="date" placeholder="auto today"/></div>
+    </div>
+    <div class="row">
+      <div><label>Fuel Cost (₹) (optional)</label><input id="fuelCost" type="number"/></div>
+      <div><label>Distance (km) (optional)</label><input id="distance" type="number"/></div>
+    </div>
+    <div class="row">
+      <div><label>Trend</label>
+        <select id="trend"><option>up</option><option>down</option><option>stable</option></select>
+      </div>
+      <div style="display:flex;align-items:end;justify-content:end">
+        <button id="addBtn">Add Rate</button>
+      </div>
+    </div>
+    <div id="msg"></div>
   </div>
 
   <div class="card">
     <h2>Bulk paste (many lanes)</h2>
-    <small>Format: <code>from,to,rate,fuelCost,distance,trend</code> — one line per lane.<br>
-    Example: <code>Mumbai,Delhi,45000,8500,1420,up</code></small>
-    <textarea id="bulk" rows="8" placeholder="Paste lines here..."></textarea>
-    <button id="bulkBtn">Upload Lines</button>
-    <div id="bulk-msg"></div>
+    <p class="mono">CSV headers required: <b>from,to,rate,fuelCost,distance,trend,date</b></p>
+    <textarea id="csv" rows="8" placeholder="from,to,rate,fuelCost,distance,trend,date&#10;Mumbai,Delhi,45000,9000,1420,up,2025-09-18"></textarea>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button id="uploadCsvBtn">Upload CSV text</button>
+      <input id="file" type="file" accept=".csv" />
+      <button id="uploadFileBtn">Upload .csv file</button>
+    </div>
+    <div id="csvMsg"></div>
   </div>
 
   <div class="card">
     <h2>Today’s entries</h2>
-    <label>Date (YYYY-MM-DD)</label><input id="date" />
-    <button id="loadBtn">Load Daily</button>
-    <div id="daily"></div>
+    <div class="row">
+      <div><label>Date (YYYY-MM-DD)</label><input id="qdate" placeholder="today"/></div>
+      <div style="display:flex;align-items:end;justify-content:end"><button id="loadBtn">Load Daily</button></div>
+    </div>
+    <table id="tbl"><thead><tr><th>Date</th><th>From</th><th>To</th><th>Rate</th><th>Trend</th></tr></thead><tbody></tbody></table>
   </div>
 </div>
 
 <script>
-async function postJSON(url, obj){
-  const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
-  return res.json();
-}
-document.querySelector('#addBtn').onclick = async ()=>{
-  const body = {
-    from: from.value.trim(), to: to.value.trim(),
-    rate: Number(rate.value||0),
-    fuelCost: Number(fuelCost.value||0)||undefined,
-    distance: Number(distance.value||0)||undefined,
-    trend: trend.value
-  };
-  const r = await postJSON('/api/admin/rates', body);
-  oneMsg.textContent = r.success ? '✅ Added' : '❌ ' + (r.error||'Failed');
-  oneMsg.className = r.success ? 'success' : 'error';
+const api = {
+  async post(path, body){ const r = await fetch('/api/c'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); return r.json(); },
+  async get(path){ const r = await fetch('/api/q'+path); return r.json(); }
 };
-
-document.querySelector('#bulkBtn').onclick = async ()=>{
-  const res = await fetch('/api/admin/rates/bulk',{method:'POST',headers:{'Content-Type':'text/plain'},body: bulk.value});
-  const r = await res.json();
-  bulkMsg.textContent = r.success ? `✅ Added ${r.added} lines, skipped ${r.skipped}` : '❌ ' + (r.error||'Failed');
-  bulkMsg.className = r.success ? 'success' : 'error';
+document.getElementById('addBtn').onclick = async () => {
+  const body = ['from','to','rate','fuelCost','distance','trend','date']
+    .reduce((o,k)=> (o[k]=document.getElementById(k)?.value||'',o),{});
+  const res = await api.post('/rates', body);
+  document.getElementById('msg').textContent = res.success ? 'Saved ✅' : ('Error: '+(res.error||''));
 };
-
-document.querySelector('#loadBtn').onclick = async ()=>{
-  const d = date.value.trim() || new Date().toISOString().slice(0,10);
-  const r = await fetch('/api/widget/rates/daily?date='+encodeURIComponent(d)).then(x=>x.json());
-  const rows = r.data.routes.map((x,i)=>`<tr><td>${i+1}</td><td>${x.from} → ${x.to}</td><td>₹ ${Number(x.rate).toLocaleString('en-IN')}</td><td>${x.trend}</td></tr>`).join('');
-  daily.innerHTML = `
-    <p><b>${d}</b> — Total: ${r.data.summary.total}, Avg: ₹ ${Number(r.data.summary.avgRate||0).toLocaleString('en-IN')}</p>
-    <table style="width:100%;border-collapse:collapse"><tr><th>#</th><th>Lane</th><th>Rate</th><th>Trend</th></tr>${rows}</table>`;
+document.getElementById('uploadCsvBtn').onclick = async () => {
+  const csv = document.getElementById('csv').value;
+  const res = await api.post('/rates/import', { csv });
+  document.getElementById('csvMsg').textContent = res.success ? `Imported ${res.count} rows ✅` : 'Error';
+};
+document.getElementById('uploadFileBtn').onclick = async () => {
+  const f = document.getElementById('file').files[0];
+  if(!f) return alert('Choose a CSV file');
+  const text = await f.text();
+  const res = await api.post('/rates/import', { csv: text });
+  document.getElementById('csvMsg').textContent = res.success ? `Imported ${res.count} rows ✅` : 'Error';
+};
+document.getElementById('loadBtn').onclick = async () => {
+  const date = document.getElementById('qdate').value;
+  const res = await api.get('/rates?date='+(date||''));
+  const tbody = document.querySelector('#tbl tbody'); tbody.innerHTML='';
+  (res.data||[]).forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.date||''}</td><td>${r.from}</td><td>${r.to}</td><td>${r.rate}</td><td>${r.trend||''}</td>`;
+    tbody.appendChild(tr);
+  });
 };
 </script>
-</body></html>
+</body>
+</html>

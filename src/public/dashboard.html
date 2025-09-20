@@ -1,0 +1,127 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WowFreightOS Dashboard</title>
+<style>
+:root{--bg:#0b1220;--card:#0f172a;--muted:#94a3b8;--border:#1f2937}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;color:#e6e6e6;background:var(--bg)}
+header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center}
+h1{margin:0;font-size:20px}
+input{flex:1;min-width:220px;background:#0f2236;color:#e6e6e6;border:1px solid #243040;border-radius:10px;padding:10px}
+main{padding:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.top{padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.title{font-weight:600}
+.muted{color:var(--muted);font-size:12px}
+details{padding:10px 14px;cursor:pointer;border-top:1px solid var(--border)}
+summary::marker{display:none}
+iframe{width:100%;height:340px;border:0;background:#06121f}
+.badge{font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:6px}
+.row{display:flex;gap:8px;align-items:center}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button{all:unset;background:#0b2034;border:1px solid var(--border);border-radius:8px;padding:6px 8px;cursor:pointer}
+button:hover{filter:brightness(1.1)}
+</style>
+
+<header>
+  <h1>Widgets</h1>
+  <input id="q" placeholder="Search widgets (name, title)…" />
+  <span id="count" class="muted"></span>
+</header>
+
+<main>
+<div id="dashboard"></div>
+
+<script>
+async function render(){
+  const res = await fetch('/registry.json');
+  const widgets = await res.json();
+  const pinned = JSON.parse(localStorage.getItem('pinned') || '[]');
+
+  const container = document.querySelector('#dashboard');
+  container.innerHTML = '';
+
+  // pinned widgets first
+  widgets
+    .filter(w => pinned.includes(w.name))
+    .forEach(w => container.innerHTML += widgetCard(w, true));
+
+  // then the rest
+  widgets
+    .filter(w => !pinned.includes(w.name))
+    .forEach(w => container.innerHTML += widgetCard(w, false));
+}
+
+function widgetCard(w, pinned){
+  return `
+    <div class="card">
+      <h3>${w.title} <span class="badge">v${w.version}</span></h3>
+      <button onclick="openWidget('${w.entry}')">Open</button>
+      <button onclick="pin('${w.name}')">${pinned ? 'Unpin' : 'Pin ⭐'}</button>
+    </div>`;
+}
+
+function openWidget(entry){ location.href = entry; }
+
+function pin(n){
+  let pinned = new Set(JSON.parse(localStorage.getItem('pinned')||'[]'));
+  pinned.has(n) ? pinned.delete(n) : pinned.add(n);
+  localStorage.setItem('pinned', JSON.stringify([...pinned]));
+  render();
+}
+
+render();
+</script>
+  <div class="grid" id="grid"></div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const grid = $('#grid');
+const q = $('#q'); const count = $('#count');
+let widgets = [];
+
+async function load() {
+  const res = await fetch('/registry.json', {cache:'no-store'});
+  widgets = await res.json(); // [{ name, title, entry, version }]
+  render();
+}
+
+function render(){
+  const term = q.value.trim().toLowerCase();
+  const list = widgets.filter(w =>
+    !term || w.name.toLowerCase().includes(term) || (w.title||'').toLowerCase().includes(term)
+  );
+  count.textContent = `${list.length} of ${widgets.length}`;
+  grid.innerHTML = '';
+  for(const w of list){
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <div class="top">
+        <div class="row">
+          <div class="title">${w.title||w.name}</div>
+          <span class="badge">v${w.version||'1.0'}</span>
+        </div>
+        <span class="muted">${w.name}</span>
+      </div>
+      <iframe loading="lazy" src="${w.entry}"></iframe>
+      <details>
+        <summary>Info</summary>
+        <div class="row muted">URL: ${w.entry}</div>
+      </details>`;
+    grid.appendChild(card);
+  }
+}
+
+q.addEventListener('input', render);
+load();
+
+// auto-refresh registry every 5s to pick new modules
+setInterval(async ()=>{
+  try{
+    const res = await fetch('/registry.json',{cache:'no-store'});
+    const j = await res.json();
+    if(JSON.stringify(j)!==JSON.stringify(widgets)){ widgets=j; render(); }
+  }catch{}
+}, 5000);
+</script>
